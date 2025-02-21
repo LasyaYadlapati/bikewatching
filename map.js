@@ -171,7 +171,7 @@ map.on("load", () => {
 
             const currentStations =
               timeFilter === -1 ? stations : filteredStations;
-            const radiusRange = timeFilter === -1 ? [0, 25] : [0, 20];
+            const radiusRange = timeFilter === -1 ? [0, 25] : [0, 22];
 
             const updatedRadiusScale = d3
               .scaleSqrt()
