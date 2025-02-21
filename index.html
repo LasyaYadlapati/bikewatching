@@ -29,12 +29,45 @@
           step="1"
         />
         <time id="selected-time">11:59 PM</time>
+        <em id="any-time">(any time)</em>
       </label>
-      <em id="any-time">(any time)</em>
     </div>
     <br />
     <div id="map">
       <svg></svg>
+    </div>
+    <circle
+      style="--departure-ratio: { stationFlow(station.departures / station.totalTraffic) }"
+    ></circle>
+    <!-- Legend Section -->
+    <div class="legend-container">
+      <h4>LEGEND:</h4>
+      <div class="legend">
+        <div class="legend-item">
+          <span class="legend-color" style="background-color: steelblue"></span>
+          More departures
+        </div>
+        <div class="legend-item">
+          <span
+            class="legend-color"
+            style="
+              background-color: color-mix(
+                in oklch,
+                steelblue 50%,
+                darkorange 50%
+              );
+            "
+          ></span>
+          Balanced
+        </div>
+        <div class="legend-item">
+          <span
+            class="legend-color"
+            style="background-color: darkorange"
+          ></span>
+          More arrivals
+        </div>
+      </div>
     </div>
 
     <!-- Mapbox GL JS JavaScript -->

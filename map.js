@@ -61,11 +61,6 @@ map.on("load", () => {
         "https://dsc106.com/labs/lab07/data/bluebikes-traffic-2024-03.csv";
       d3.csv(csvurl)
         .then((trips) => {
-          for (let trip of trips) {
-            trip.started_at = new Date(trip.started_at);
-            trip.ended_at = new Date(trip.ended_at);
-          }
-
           departures = d3.rollup(
             trips,
             (v) => v.length,
@@ -100,8 +95,8 @@ map.on("load", () => {
             .attr("r", (d) => radiusScale(d.totalTraffic))
             .attr("fill", "steelblue")
             .attr("stroke", "white")
-            .attr("stroke-width", 1.5)
-            .attr("opacity", 0.8)
+            .attr("stroke-width", 1)
+            .attr("opacity", 0.7)
             .each(function (d) {
               d3.select(this)
                 .append("title")
@@ -126,14 +121,18 @@ map.on("load", () => {
             return date.getHours() * 60 + date.getMinutes();
           }
 
-          let filteredTrips = [];
-          let filteredArrivals = new Map();
-          let filteredDepartures = new Map();
-          let filteredStations = [];
+          for (let trip of trips) {
+            trip.started_at = new Date(trip.started_at);
+            trip.ended_at = new Date(trip.ended_at);
+          }
 
           let timeFilter = -1;
 
           function filterTripsbyTime() {
+            let filteredTrips = [];
+            let filteredArrivals = new Map();
+            let filteredDepartures = new Map();
+            let filteredStations = [];
             filteredTrips =
               timeFilter === -1
                 ? trips
@@ -170,28 +169,31 @@ map.on("load", () => {
               return newStation;
             });
 
-            const radiusScale = d3
-              .scaleSqrt()
-              .domain([0, d3.max(filteredStations, (d) => d.totalTraffic)])
-              .range(timeFilter === -1 ? [0, 25] : [3, 50]);
+            const currentStations =
+              timeFilter === -1 ? stations : filteredStations;
+            const radiusRange = timeFilter === -1 ? [0, 25] : [0, 20];
 
-            const circles = svg
+            const updatedRadiusScale = d3
+              .scaleSqrt()
+              .domain([0, d3.max(currentStations, (d) => d.totalTraffic)])
+              .range(radiusRange);
+
+            // update each circle's radius using the new scale
+            svg
               .selectAll("circle")
-              .data(filteredStations)
-              .enter()
-              .append("circle")
-              .attr("r", (d) => radiusScale(d.totalTraffic))
-              .attr("fill", "steelblue")
-              .attr("stroke", "white")
-              .attr("stroke-width", 1.5)
-              .attr("opacity", 0.8)
+              .data(currentStations, (d) => d.short_name) // use a unique key
+              .attr("r", (d) => updatedRadiusScale(d.totalTraffic))
               .each(function (d) {
+                d3.select(this).select("title").remove();
                 d3.select(this)
                   .append("title")
                   .text(
-                    `${d.totalTraffic} trips (${d.filteredDepartures} departures, ${d.filteredArrivals} arrivals)`
+                    `${d.totalTraffic} trips (${d.departures} departures, ${d.arrivals} arrivals)`
                   );
-              });
+              })
+              .style("--departure-ratio", (d) =>
+                stationFlow(d.departures / d.totalTraffic)
+              );
 
             function updatePositions() {
               circles
@@ -238,3 +240,5 @@ map.on("load", () => {
       console.error("Error loading JSON:", error);
     });
 });
+
+let stationFlow = d3.scaleQuantize().domain([0, 1]).range([0, 0.5, 1]);
